@@ -24,7 +24,7 @@ define('OPENTOK_SDK_USER_AGENT', 'OpenTok-PHP-SDK/' . OPENTOK_SDK_VERSION);
 /**
 * @internal
 */
-class Client extends \Guzzle\Http\Client
+class Client extends \Guzzle\Http\Client implements ClientInterface
 {
     protected $apiKey;
     protected $apiSecret;
