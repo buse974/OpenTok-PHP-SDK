@@ -6,9 +6,9 @@ namespace OpenTok\Exception;
 /**
  * Defines the exception thrown when you use an invalid API or secret.
  */
-class AuthenticationException extends OpenTok\Exception\DomainException implements \OpenTok\Exception\Exception
+class AuthenticationException extends \OpenTok\Exception\DomainException implements \OpenTok\Exception\Exception
 {
-    public function __construct($apiKey, $apiSecret, $code = 0, $previous)
+    public function __construct($apiKey, $apiSecret, $code = 0, $previous = null)
     {
         $message = 'The OpenTok API credentials were rejected. apiKey='.$apiKey.', apiSecret='.$apiSecret;
          parent::__construct($message, $code, $previous);
