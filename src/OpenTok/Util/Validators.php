@@ -47,7 +47,7 @@ class Validators
     {
         if (isset($client) && !($client instanceof ClientInterface)) {
             throw new InvalidArgumentException(
-                'The optional client was not an instance of \OpenTok\Util\Client. client:'.print_r($client, true)
+                'The optional client was not an instance of \OpenTok\Util\ClientInterface. client:'.print_r($client, true)
             );
         }
     }
