@@ -3,7 +3,7 @@
 use Guzzle\Plugin\Mock\MockPlugin;
 
 use OpenTok\Archive;
-use OpenTok\Util\Client;
+use OpenTok\Util\OpenTokClient;
 
 class ArchiveTest extends PHPUnit_Framework_TestCase {
 
@@ -40,7 +40,7 @@ class ArchiveTest extends PHPUnit_Framework_TestCase {
         $this->API_KEY = defined('API_KEY') ? API_KEY : '12345678';
         $this->API_SECRET = defined('API_SECRET') ? API_SECRET : '0123456789abcdef0123456789abcdef0123456789';
 
-        $this->client = new Client();
+        $this->client = new OpenTokClient();
         $this->archive = new Archive($this->archiveData, array(
             'apiKey' => $this->API_KEY,
             'apiSecret' => $this->API_SECRET,
@@ -78,7 +78,7 @@ class ArchiveTest extends PHPUnit_Framework_TestCase {
             self::$mockBasePath . 'v2/partner/APIKEY/archive/ARCHIVEID/stop'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // Act
         $this->archive->stop();
@@ -119,7 +119,7 @@ class ArchiveTest extends PHPUnit_Framework_TestCase {
             self::$mockBasePath . 'v2/partner/APIKEY/archive/ARCHIVEID/delete'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // Act
         // TODO: should this test be run on an archive object whose fixture has status 'available'
@@ -173,7 +173,7 @@ class ArchiveTest extends PHPUnit_Framework_TestCase {
       $apiKey = defined('API_KEY') ? API_KEY : '12345678';
       $apiSecret = defined('API_SECRET') ? API_SECRET : '0123456789abcdef0123456789abcdef0123456789';
 
-      $client = new Client();
+      $client = new OpenTokClient();
       $archive = new Archive($archiveData, array(
           'apiKey' => $this->API_KEY,
           'apiSecret' => $this->API_SECRET,

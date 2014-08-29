@@ -4,206 +4,180 @@ namespace OpenTok\Util;
 
 use \Guzzle\Http\Exception\ClientErrorResponseException;
 use \Guzzle\Http\Exception\ServerErrorResponseException;
+use \Guzzle\Http\Client as ClientGuzzle;
 
 use OpenTok\Exception\Exception;
 use OpenTok\Exception\DomainException;
 use OpenTok\Exception\UnexpectedValueException;
 use OpenTok\Exception\AuthenticationException;
 
-use OpenTok\Exception\ArchiveException;
-use OpenTok\Exception\ArchiveDomainException;
-use OpenTok\Exception\ArchiveUnexpectedValueException;
-use OpenTok\Exception\ArchiveAuthenticationException;
-
-// TODO: build this dynamically
-/** @internal */
-define('OPENTOK_SDK_VERSION', '2.2.3-alpha.1');
-/** @internal */
-define('OPENTOK_SDK_USER_AGENT', 'OpenTok-PHP-SDK/' . OPENTOK_SDK_VERSION);
+use Guzzle\Http\Message\Response;
+use Guzzle\Http\Message\EntityEnclosingRequest;
 
 /**
-* @internal
-*/
-class Client extends \Guzzle\Http\Client implements ClientInterface
+ * 
+ * Default Client Guzzle
+ *
+ */
+class Client implements ClientInterface
 {
-    protected $apiKey;
-    protected $apiSecret;
-    protected $configured = false;
+	/**
+	 * 
+	 * @var EntityEnclosingRequest
+	 */
+    protected $request;
+    
+    /**
+     * 
+     * @var Response
+     */
+    protected $reponse;
 
-    public function configure($apiKey, $apiSecret, $apiUrl)
+    /**
+     * 
+     * @var \Guzzle\Http\Client
+     */
+    protected $http_client;
+    
+    public function __construct()
     {
-        $this->apiKey = $apiKey;
-        $this->apiSecret = $apiSecret;
-        $this->setBaseUrl($apiUrl);
-        $this->setUserAgent(OPENTOK_SDK_USER_AGENT, true);
-
-        // TODO: attach plugins
-        $partnerAuthPlugin = new Plugin\PartnerAuth($apiKey, $apiSecret);
-        $this->addSubscriber($partnerAuthPlugin);
-
-        $this->configured = true;
+    	$this->http_client = new ClientGuzzle();
     }
-
-    public function isConfigured() {
-        return $this->configured;
-    }
-
-    // General API Requests
-
-    public function createSession($options)
+    
+    public function post($uri)
     {
-        $request = $this->post('/session/create');
-        $request->addPostFields($this->postFieldsForOptions($options));
-        try {
-            $sessionXml = $request->send()->xml();
-        } catch (\RuntimeException $e) {
-            // The $response->xml() method uses the following code to throw a parse exception:
-            // throw new RuntimeException('Unable to parse response body into XML: ' . $errorMessage);
-            // TODO: test if we have a parse exception and handle it, otherwise throw again
-            throw $e;
-        } catch (\Exception $e) {
-            $this->handleException($e);
-            return;
-        }
-        return $sessionXml;
+    	$this->request = $this->http_client->post($uri);
+    	
+    	return $this;
     }
-
-    // Archiving API Requests
-
-    public function startArchive($params)
+    
+    public function get($uri)
     {
-        // set up the request
-        $request = $this->post('/v2/partner/'.$this->apiKey.'/archive');
-        $request->setBody(json_encode($params));
-        $request->setHeader('Content-Type', 'application/json');
-
-        try {
-            $archiveJson = $request->send()->json();
-        } catch (\Exception $e) {
-            $this->handleArchiveException($e);
-        }
-        return $archiveJson;
+    	$this->request = $this->http_client->get($uri);
+    	
+    	return $this;
     }
-
-    public function stopArchive($archiveId)
+    
+    public function addAuth($apiKey, $apiSecret)
     {
-        // set up the request
-        $request = $this->post('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId.'/stop');
-        $request->setHeader('Content-Type', 'application/json');
-
-        try {
-            $archiveJson = $request->send()->json();
-        } catch (\Exception $e) {
-            // TODO: what happens with JSON parse errors?
-            $this->handleArchiveException($e);
-        }
-        return $archiveJson;
+    	$partnerAuthPlugin = new Plugin\PartnerAuth($apiKey, $apiSecret);
+    	$this->http_client->addSubscriber($partnerAuthPlugin);
+    	
+    	return $this;
     }
-
-    public function getArchive($archiveId)
+    
+    public function delete($uri)
     {
-        $request = $this->get('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId);
-        try {
-            $archiveJson = $request->send()->json();
-        } catch (\Exception $e) {
-            $this->handleException($e);
-            return;
-        }
-        return $archiveJson;
+    	$this->request = $this->http_client->delete($uri);
+    	
+    	return $this;
     }
-
-    public function deleteArchive($archiveId)
+    
+    public function send()
     {
-        $request = $this->delete('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId);
-        $request->setHeader('Content-Type', 'application/json');
-        try {
-            $request->send()->json();
-        } catch (\Exception $e) {
-            $this->handleException($e);
-            return false;
-        }
-        return true;
+    	try {
+    		$this->reponse = $this->request->send();
+    	} catch (\Exception $e) {
+    		$this->handleException($e);
+    	}
+    	
+    	return $this;
     }
-
-    public function listArchives($offset, $count)
+    
+    public function setUserAgent($user_agent, $includeDefault = null)
     {
-        $request = $this->get('/v2/partner/'.$this->apiKey.'/archive');
-        if ($offset != 0) $request->getQuery()->set('offset', $offset);
-        if (!empty($count)) $request->getQuery()->set('count', $count);
-        try {
-            $archiveListJson = $request->send()->json();
-        } catch (\Exception $e) {
-            $this->handleException($e);
-            return;
-        }
-        return $archiveListJson;
+    	$this->http_client->setUserAgent($user_agent, $includeDefault);
+    	
+    	return $this;
     }
-
-    // Helpers
-
-    private function postFieldsForOptions($options)
+    
+    public function setBody($body,$conTentType = null)
     {
-        $options['p2p.preference'] = empty($options['mediaMode']) ? MediaMode::ROUTED : $options['mediaMode'];
-        unset($options['mediaMode']);
-        if (empty($options['location'])) {
-            unset($options['location']);
-        }
-        $options['api_key'] = $this->apiKey;
-        return $options;
+    	$this->request->setBody($body,$conTentType);
+    	
+    	return $this;
     }
-
+    
+    public function setHeader($header, $value)
+    {
+    	$this->request->setHeader($header, $value);
+    	
+    	return $this;
+    }
+    
+    public function xml()
+    {
+    	return $this->reponse->xml();
+    }
+    
+    public function json()
+    {
+    	return $this->reponse->json();
+    }
+    
+    public function setParameterPost($fields)
+    {
+    	$this->request->addPostFields($fields);
+    	 
+    	return $this;
+    }
+    
+    public function setParameterGet($fields)
+    {
+    	foreach ($fields as $key => $value) {
+    		$this->request->getQuery()->set($key, $value);
+    	}
+    	
+    	return $this;
+    }
+    
+    public function setBaseUrl($url)
+    {
+    	$this->http_client->setBaseUrl($url);
+    	
+    	return $this;
+    }
+    
+    public function addSubscriber($partnerAuthPlugin)
+    {
+    	$this->http_client->addSubscriber($partnerAuthPlugin);
+    }
+    
     //echo 'Uh oh! ' . $e->getMessage();
     //echo 'HTTP request URL: ' . $e->getRequest()->getUrl() . "\n";
     //echo 'HTTP request: ' . $e->getRequest() . "\n";
     //echo 'HTTP response status: ' . $e->getResponse()->getStatusCode() . "\n";
     //echo 'HTTP response: ' . $e->getResponse() . "\n";
-
+    
     private function handleException($e)
     {
-        // TODO: test coverage
-        if ($e instanceof ClientErrorResponseException) {
-            // will catch all 4xx errors
-            if ($e->getResponse()->getStatusCode() == 403) {
-                throw new AuthenticationException(
-                    $this->apiKey,
-                    $this->apiSecret,
-                    null,
-                    $e
-                );
-            } else {
-                throw new DomainException(
-                    'The OpenTok API request failed: '. json_decode($e->getResponse()->getBody(true))->message,
-                    null,
-                    $e
-                );
-            }
-        } else if ($e instanceof ServerErrorResponseException) {
-            // will catch all 5xx errors
-            throw new UnexpectedValueException(
-                'The OpenTok API server responded with an error: ' . json_decode($e->getResponse()-getBody(true))->message,
-                null,
-                $e
-            );
-        } else {
-            // TODO: check if this works because Exception is an interface not a class
-            throw new Exception('An unexpected error occurred');
-        }
+    	// TODO: test coverage
+    	if ($e instanceof ClientErrorResponseException) {
+    		// will catch all 4xx errors
+    		if ($e->getResponse()->getStatusCode() == 403) {
+    			throw new AuthenticationException(
+    					$this->apiKey,
+    					$this->apiSecret,
+    					null,
+    					$e
+    			);
+    		} else {
+    			throw new DomainException(
+    					'The OpenTok API request failed: '. json_decode($e->getResponse()->getBody(true))->message,
+    					null,
+    					$e
+    			);
+    		}
+    	} else if ($e instanceof ServerErrorResponseException) {
+    		// will catch all 5xx errors
+    		throw new UnexpectedValueException(
+    				'The OpenTok API server responded with an error: ' . json_decode($e->getResponse()-getBody(true))->message,
+    				null,
+    				$e
+    		);
+    	} else {
+    		// TODO: check if this works because Exception is an interface not a class
+    		throw new Exception('An unexpected error occurred');
+    	}
     }
-
-    private function handleArchiveException($e)
-    {
-        try {
-            $this->handleException($e);
-        } catch (AuthenticationException $ae) {
-            throw new ArchiveAuthenticationException($this->apiKey, $this->apiSecret, null, $ae->getPrevious());
-        } catch (DomainException $de) {
-            throw new ArchiveDomainException($e->getMessage(), null, $de->getPrevious());
-        } catch (UnexpectedValueException $uve) {
-            throw new ArchiveUnexpectedValueException($e->getMessage(), null, $uve->getPrevious());
-        } catch (Exception $oe) {
-            // TODO: check if this works because ArchiveException is an interface not a class
-            throw new ArchiveException($e->getMessage(), null, $oe->getPrevious());
-        }
-    }
-
 }

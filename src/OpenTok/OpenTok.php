@@ -10,6 +10,7 @@ use OpenTok\Util\Client;
 use OpenTok\Util\Validators;
 
 use OpenTok\Exception\UnexpectedValueException;
+use OpenTok\Util\OpenTokClient;
 
 /**
 * Contains methods for creating OpenTok sessions, generating tokens, and working with archives.
@@ -44,7 +45,7 @@ class OpenTok {
         Validators::validateApiUrl($apiUrl);
         Validators::validateClient($client);
 
-        $this->client = isset($client) ? $client : new Client();
+        $this->client = isset($client) ? $client : new OpenTokClient();
         $this->client->configure($apiKey, $apiSecret, $apiUrl);
         $this->apiKey = $apiKey;
         $this->apiSecret = $apiSecret;

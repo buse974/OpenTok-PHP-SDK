@@ -4,12 +4,17 @@ namespace OpenTok\Util;
 
 interface ClientInterface
 {
-	public function configure($apiKey, $apiSecret, $apiUrl);
-	public function isConfigured();
-	public function createSession($options);
-	public function startArchive($params);
-	public function stopArchive($archiveId);
-	public function getArchive($archiveId);
-	public function deleteArchive($archiveId);
-	public function listArchives($offset, $count);
+	public function post($uri);
+	public function get($uri);
+	public function delete($uri);
+	public function send();
+	public function setUserAgent($user_agent, $includeDefault = null);
+	public function setBody($body,$conTentType = null);
+	public function setHeader($header, $value);
+	public function xml();
+	public function json();
+	public function setParameterPost($fields);
+	public function setParameterGet($fields);
+	public function setBaseUrl($url);
+	public function addAuth($apiKey, $apiSecret);
 }

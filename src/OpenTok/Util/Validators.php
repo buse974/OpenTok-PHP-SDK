@@ -45,7 +45,7 @@ class Validators
     }
     public static function validateClient($client)
     {
-        if (isset($client) && !($client instanceof ClientInterface)) {
+        if (isset($client) && !($client instanceof OpenTokClientInterface)) {
             throw new InvalidArgumentException(
                 'The optional client was not an instance of \OpenTok\Util\ClientInterface. client:'.print_r($client, true)
             );
