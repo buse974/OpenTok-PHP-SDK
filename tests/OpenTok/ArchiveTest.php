@@ -78,7 +78,7 @@ class ArchiveTest extends PHPUnit_Framework_TestCase {
             self::$mockBasePath . 'v2/partner/APIKEY/archive/ARCHIVEID/stop'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // Act
         $this->archive->stop();
@@ -119,7 +119,7 @@ class ArchiveTest extends PHPUnit_Framework_TestCase {
             self::$mockBasePath . 'v2/partner/APIKEY/archive/ARCHIVEID/delete'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // Act
         // TODO: should this test be run on an archive object whose fixture has status 'available'

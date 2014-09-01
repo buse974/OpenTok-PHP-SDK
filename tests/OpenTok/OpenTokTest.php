@@ -62,7 +62,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'session/create/relayed'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // Act
         $session = $this->opentok->createSession();
@@ -106,7 +106,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'session/create/routed_location-12.34.56.78'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // Act
         $session = $this->opentok->createSession(array(
@@ -156,7 +156,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'session/create/relayed'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // Act
         $session = $this->opentok->createSession(array(
@@ -328,7 +328,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'v2/partner/APIKEY/archive/session_name-showtime'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // This sessionId was generated using a different apiKey, but this method doesn't do any
         // decoding to check, so its fine.
@@ -376,7 +376,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'v2/partner/APIKEY/archive/ARCHIVEID/stop'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         $archiveId = '063e72a4-64b4-43c8-9da5-eca071daab89';
 
@@ -418,7 +418,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'v2/partner/APIKEY/archive/ARCHIVEID/get'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         $archiveId = '063e72a4-64b4-43c8-9da5-eca071daab89';
 
@@ -458,7 +458,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'v2/partner/APIKEY/archive/ARCHIVEID/delete'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         $archiveId = '063e72a4-64b4-43c8-9da5-eca071daab89';
 
@@ -500,7 +500,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'v2/partner/APIKEY/archive/get'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         // Act
         // TODO: use offset and count
@@ -539,7 +539,7 @@ class OpenTokTest extends PHPUnit_Framework_TestCase
             self::$mockBasePath . 'v2/partner/APIKEY/archive/ARCHIVEID/get-expired'
         );
         $mock->addResponse($response);
-        $this->client->addSubscriber($mock);
+        $this->client->getHttpClient()->addSubscriber($mock);
 
         $archiveId = '063e72a4-64b4-43c8-9da5-eca071daab89';
 

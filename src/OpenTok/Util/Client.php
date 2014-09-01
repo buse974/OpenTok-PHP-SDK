@@ -24,22 +24,30 @@ define('OPENTOK_SDK_USER_AGENT', 'OpenTok-PHP-SDK/' . OPENTOK_SDK_VERSION);
 /**
 * @internal
 */
-class Client extends \Guzzle\Http\Client implements ClientInterface
+class Client implements ClientInterface
 {
     protected $apiKey;
     protected $apiSecret;
     protected $configured = false;
+    protected $httpClient;
 
+    public function __construct($http_client = null)
+    {
+    	if(null !== $http_client && $http_client instanceof \Guzzle\Http\ClientInterface) {
+    		$this->http_client = $http_client;
+    	}
+    }
+    
     public function configure($apiKey, $apiSecret, $apiUrl)
     {
         $this->apiKey = $apiKey;
         $this->apiSecret = $apiSecret;
-        $this->setBaseUrl($apiUrl);
-        $this->setUserAgent(OPENTOK_SDK_USER_AGENT, true);
+        $this->getHttpClient()->setBaseUrl($apiUrl);
+        $this->getHttpClient()->setUserAgent(OPENTOK_SDK_USER_AGENT, true);
 
         // TODO: attach plugins
         $partnerAuthPlugin = new Plugin\PartnerAuth($apiKey, $apiSecret);
-        $this->addSubscriber($partnerAuthPlugin);
+        $this->getHttpClient()->addSubscriber($partnerAuthPlugin);
 
         $this->configured = true;
     }
@@ -52,7 +60,7 @@ class Client extends \Guzzle\Http\Client implements ClientInterface
 
     public function createSession($options)
     {
-        $request = $this->post('/session/create');
+        $request = $this->getHttpClient()->post('/session/create');
         $request->addPostFields($this->postFieldsForOptions($options));
         try {
             $sessionXml = $request->send()->xml();
@@ -73,7 +81,7 @@ class Client extends \Guzzle\Http\Client implements ClientInterface
     public function startArchive($params)
     {
         // set up the request
-        $request = $this->post('/v2/partner/'.$this->apiKey.'/archive');
+        $request = $this->getHttpClient()->post('/v2/partner/'.$this->apiKey.'/archive');
         $request->setBody(json_encode($params));
         $request->setHeader('Content-Type', 'application/json');
 
@@ -88,7 +96,7 @@ class Client extends \Guzzle\Http\Client implements ClientInterface
     public function stopArchive($archiveId)
     {
         // set up the request
-        $request = $this->post('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId.'/stop');
+        $request = $this->getHttpClient()->post('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId.'/stop');
         $request->setHeader('Content-Type', 'application/json');
 
         try {
@@ -102,7 +110,7 @@ class Client extends \Guzzle\Http\Client implements ClientInterface
 
     public function getArchive($archiveId)
     {
-        $request = $this->get('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId);
+        $request = $this->getHttpClient()->get('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId);
         try {
             $archiveJson = $request->send()->json();
         } catch (\Exception $e) {
@@ -114,7 +122,7 @@ class Client extends \Guzzle\Http\Client implements ClientInterface
 
     public function deleteArchive($archiveId)
     {
-        $request = $this->delete('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId);
+        $request = $this->getHttpClient()->delete('/v2/partner/'.$this->apiKey.'/archive/'.$archiveId);
         $request->setHeader('Content-Type', 'application/json');
         try {
             $request->send()->json();
@@ -127,7 +135,7 @@ class Client extends \Guzzle\Http\Client implements ClientInterface
 
     public function listArchives($offset, $count)
     {
-        $request = $this->get('/v2/partner/'.$this->apiKey.'/archive');
+        $request = $this->getHttpClient()->get('/v2/partner/'.$this->apiKey.'/archive');
         if ($offset != 0) $request->getQuery()->set('offset', $offset);
         if (!empty($count)) $request->getQuery()->set('count', $count);
         try {
@@ -206,4 +214,17 @@ class Client extends \Guzzle\Http\Client implements ClientInterface
         }
     }
 
+    /**
+     * Get client http
+     * 
+     * @return \Guzzle\Http\Client
+     */
+    public function getHttpClient()
+    {
+    	if(null === $this->httpClient) {
+    		$this->httpClient = new \Guzzle\Http\Client();
+    	}
+    	
+    	return $this->httpClient;
+    }
 }
