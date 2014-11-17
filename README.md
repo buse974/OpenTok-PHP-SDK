@@ -222,3 +222,4 @@ See http://tokbox.com/opentok/support/ for all our support options.
 
 Find a bug? File it on the [Issues](https://github.com/opentok/opentok-php-sdk/issues) page. Hint:
 test cases are really helpful!
+
